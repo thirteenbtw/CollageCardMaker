@@ -1,23 +1,37 @@
-export type AssetCategory = 'background' | 'cutout' | 'sticker' | 'frame'
+export type AssetCategory = 'photo' | 'cutout' | 'sticker' | 'background' | 'frame'
+
+export const CATEGORIES: AssetCategory[] = ['photo', 'cutout', 'sticker', 'background', 'frame']
 
 export const CATEGORY_LABELS: Record<AssetCategory, string> = {
-  background: 'Фоны',
+  photo: 'Фото',
   cutout: 'Вырезки',
   sticker: 'Стикеры',
+  background: 'Фоны',
   frame: 'Рамки',
 }
 
-export const CATEGORIES: AssetCategory[] = ['background', 'cutout', 'sticker', 'frame']
+/** singular, for badges */
+export const CATEGORY_KIND: Record<AssetCategory, string> = {
+  photo: 'Фото',
+  cutout: 'Вырезка',
+  sticker: 'Стикер',
+  background: 'Фон',
+  frame: 'Рамка',
+}
 
 export interface Asset {
   id: string
   name: string
   category: AssetCategory
   tags: string[]
+  /** named colour ids, see colors.ts */
+  colors: string[]
   blob: Blob
+  mime: string
   width: number
   height: number
   createdAt: number
+  starter?: boolean
 }
 
 interface BaseNode {
@@ -28,6 +42,8 @@ interface BaseNode {
   scaleX: number
   scaleY: number
   opacity: number
+  locked?: boolean
+  shadow?: boolean
 }
 
 export interface ImageNode extends BaseNode {
@@ -36,6 +52,9 @@ export interface ImageNode extends BaseNode {
   assetId: string
   width: number
   height: number
+  torn?: boolean
+  /** washi tape colour id, see effects.ts */
+  tape?: string | null
 }
 
 export interface TextNode extends BaseNode {
@@ -43,10 +62,14 @@ export interface TextNode extends BaseNode {
   text: string
   fontFamily: string
   fontSize: number
+  fontStyle: string
   fill: string
   align: 'left' | 'center' | 'right'
   width: number
-  fontStyle: string
+  letterSpacing?: number
+  /** label-maker tape behind the text */
+  bg?: string | null
+  preset?: string
 }
 
 export type CardNode = ImageNode | TextNode
@@ -62,5 +85,7 @@ export interface Draft {
   name: string
   doc: CardDoc
   thumbnail: string
+  createdAt: number
   updatedAt: number
+  exported?: boolean
 }

@@ -32,6 +32,9 @@ export interface Asset {
   height: number
   createdAt: number
   starter?: boolean
+  /** untouched source image for re-cutting; `crop` is where `blob` sits inside it */
+  original?: Blob
+  crop?: { x: number; y: number; w: number; h: number }
 }
 
 interface BaseNode {

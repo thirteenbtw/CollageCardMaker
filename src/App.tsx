@@ -5,6 +5,7 @@ import { Library } from './pages/Library'
 import { EditorPage } from './editor/EditorPage'
 import { AutoGenDialog } from './dialogs/AutoGen'
 import { ExportDialog } from './dialogs/Export'
+import { CutoutHost } from './cutout/CutoutEditor'
 import { ConfirmHost, Toast } from './ui/common'
 import { useLibrary } from './library'
 import { useDrafts } from './drafts'
@@ -25,6 +26,7 @@ export default function App() {
       {route.page === 'editor' && <EditorPage key={route.id} id={route.id} />}
       <AutoGenDialog />
       <ExportDialog />
+      <CutoutHost />
       <ConfirmHost />
       <Toast />
     </>

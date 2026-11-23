@@ -130,6 +130,7 @@ function AssetPanel({ asset, onClose }: { asset: Asset; onClose: () => void }) {
   const { update, remove, replaceImage, assets } = useLibrary()
   const drafts = useDrafts((s) => s.drafts)
   const notify = useUI((s) => s.notify)
+  const openCutout = useUI((s) => s.openCutout)
   const [name, setName] = useState(asset.name)
   const [category, setCategory] = useState<AssetCategory>(asset.category)
   const [tags, setTags] = useState(asset.tags)
@@ -218,6 +219,9 @@ function AssetPanel({ asset, onClose }: { asset: Asset; onClose: () => void }) {
           <Icon name="wand" size={16} /> Удалить фон
         </button>
       )}
+      <button type="button" className="btn sm" onClick={() => openCutout(asset.id)}>
+        <Icon name="scissors" size={16} /> Вырезать вручную
+      </button>
       <div className="used-in">
         {usedIn.length ? (
           <>

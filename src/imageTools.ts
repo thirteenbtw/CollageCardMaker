@@ -107,7 +107,14 @@ export function removeBackground(c: HTMLCanvasElement, tolerance = 42) {
 }
 
 /** Crop transparent margins so the cut-out's box hugs the object. */
-export function trimTransparent(c: HTMLCanvasElement): HTMLCanvasElement {
+export interface CropRect {
+  x: number
+  y: number
+  w: number
+  h: number
+}
+
+export function trimTransparent(c: HTMLCanvasElement): { canvas: HTMLCanvasElement; rect: CropRect } {
   const w = c.width
   const h = c.height
   const d = c.getContext('2d', { willReadFrequently: true })!.getImageData(0, 0, w, h).data
@@ -123,16 +130,25 @@ export function trimTransparent(c: HTMLCanvasElement): HTMLCanvasElement {
         if (y < y0) y0 = y
         if (y > y1) y1 = y
       }
-  if (x1 < 0) return c
+  const full = { canvas: c, rect: { x: 0, y: 0, w, h } }
+  if (x1 < 0) return full
   const pad = 4
   x0 = Math.max(0, x0 - pad)
   y0 = Math.max(0, y0 - pad)
   x1 = Math.min(w - 1, x1 + pad)
   y1 = Math.min(h - 1, y1 + pad)
-  if (x0 === 0 && y0 === 0 && x1 === w - 1 && y1 === h - 1) return c
+  if (x0 === 0 && y0 === 0 && x1 === w - 1 && y1 === h - 1) return full
   const out = document.createElement('canvas')
   out.width = x1 - x0 + 1
   out.height = y1 - y0 + 1
   out.getContext('2d')!.drawImage(c, x0, y0, out.width, out.height, 0, 0, out.width, out.height)
+  return { canvas: out, rect: { x: x0, y: y0, w: out.width, h: out.height } }
+}
+
+export function cloneCanvas(c: HTMLCanvasElement) {
+  const out = document.createElement('canvas')
+  out.width = c.width
+  out.height = c.height
+  out.getContext('2d')!.drawImage(c, 0, 0)
   return out
 }

@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { nanoid } from 'nanoid'
 import { db } from './db'
 import type { Asset, AssetCategory } from './types'
-import { canvasToBlob, fileToCanvas, hasAlpha, removeBackground, trimTransparent } from './imageTools'
+import { canvasToBlob, cloneCanvas, fileToCanvas, hasAlpha, removeBackground, trimTransparent, type CropRect } from './imageTools'
 import { detectColors } from './colors'
 
 /** object URLs and decoded images, keyed by asset id */
@@ -65,11 +65,19 @@ export async function prepareAsset(file: File, opts: UploadOptions, extra: Parti
   else category = 'photo'
 
   let transparent = alpha
+  let original: HTMLCanvasElement | null = null
+  let crop: CropRect | undefined
   if (opts.removeBg && category === 'cutout' && !alpha) {
+    original = cloneCanvas(canvas)
     const share = removeBackground(canvas)
     transparent = share > 0.02
+    if (!transparent) original = null
   }
-  if (transparent && (category === 'cutout' || category === 'sticker')) canvas = trimTransparent(canvas)
+  if (transparent && (category === 'cutout' || category === 'sticker')) {
+    const t = trimTransparent(canvas)
+    canvas = t.canvas
+    crop = t.rect
+  }
 
   const mime = transparent || file.type === 'image/png' ? 'image/png' : 'image/jpeg'
   const blob = await canvasToBlob(canvas, mime, 0.92)
@@ -84,6 +92,8 @@ export async function prepareAsset(file: File, opts: UploadOptions, extra: Parti
     width: canvas.width,
     height: canvas.height,
     createdAt: Date.now(),
+    // keep the untouched source so the cut can be corrected by hand later
+    ...(original ? { original: await canvasToBlob(original, file.type === 'image/png' ? 'image/png' : 'image/jpeg', 0.95), crop } : {}),
     ...extra,
   }
 }
@@ -97,6 +107,7 @@ interface LibraryState {
   addAssets: (assets: Asset[]) => Promise<void>
   update: (id: string, patch: Partial<Pick<Asset, 'name' | 'category' | 'tags' | 'colors'>>) => Promise<void>
   replaceImage: (id: string, canvas: HTMLCanvasElement) => Promise<void>
+  replaceAsset: (a: Asset) => Promise<void>
   remove: (id: string) => Promise<void>
   byId: (id: string) => Asset | undefined
 }
@@ -151,6 +162,11 @@ export const useLibrary = create<LibraryState>((set, get) => ({
     await db.putAsset(next)
     forget(id)
     set({ assets: get().assets.map((x) => (x.id === id ? next : x)) })
+  },
+  async replaceAsset(a) {
+    await db.putAsset(a)
+    forget(a.id)
+    set({ assets: get().assets.map((x) => (x.id === a.id ? a : x)) })
   },
   async remove(id) {
     await db.deleteAsset(id)

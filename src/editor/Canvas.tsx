@@ -1,11 +1,11 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Stage, Layer, Rect, Image as KImage, Text as KText, Shape, Group, Transformer } from 'react-konva'
 import type Konva from 'konva'
 import { useEditor } from '../editor'
 import { useLibrary, loadAssetImage } from '../library'
 import { getFormat } from '../formats'
 import type { ImageNode, TextNode } from '../types'
-import { shadowDistance, shadowProps, tapeRect, textConfig, textLayout, tornPolygon } from '../effects'
+import { colorized, imageSize, shadowDistance, shadowProps, tapePosFromPoint, tapeRect, TAPE_DEFAULT, textConfig, textLayout, tornPolygon } from '../effects'
 import { tornSceneFunc } from '../render'
 
 export const ASSET_MIME = 'application/x-card-asset'
@@ -52,67 +52,110 @@ function handlers(id: string, locked?: boolean) {
   const { updateNode } = useEditor.getState()
   return {
     draggable: !locked,
-    onDragEnd: (e: Konva.KonvaEventObject<DragEvent>) => updateNode(id, { x: e.target.x(), y: e.target.y() }),
+    onDragEnd: (e: Konva.KonvaEventObject<DragEvent>) => {
+      // ignore drags of children (e.g. the washi tape) that bubble up
+      if (e.target !== e.currentTarget) return
+      updateNode(id, { x: e.target.x(), y: e.target.y() })
+    },
   }
 }
 
 function ImageItem({ node, dist, hovered, selected, onSelect, onHover }: ItemProps<ImageNode>) {
   const asset = useLibrary((s) => s.assets.find((a) => a.id === node.assetId))
-  const [img, setImg] = useState<HTMLImageElement | null>(null)
+  const [source, setSource] = useState<HTMLImageElement | null>(null)
+  const outer = useRef<Konva.Group>(null)
   useEffect(() => {
     let alive = true
-    if (asset) loadAssetImage(asset).then((i) => alive && setImg(i), () => {})
+    if (asset) loadAssetImage(asset).then((i) => alive && setSource(i), () => {})
     return () => {
       alive = false
     }
   }, [asset])
+  const img = useMemo(() => (source ? colorized(source, node.assetId, node.color) : null), [source, node.assetId, node.color])
+  const W = node.width * Math.abs(node.scaleX)
+  const H = node.height * Math.abs(node.scaleY)
+  // The selection frame must hug the picture itself: torn edges, shadows and the tape
+  // would otherwise stretch (or, for the custom torn shape, collapse) the box.
+  useLayoutEffect(() => {
+    const g = outer.current
+    if (!g) return
+    const base = Object.getPrototypeOf(g).getClientRect as Konva.Group['getClientRect']
+    g.getClientRect = function (cfg) {
+      if (cfg?.skipTransform) return { x: -W / 2, y: -H / 2, width: W, height: H }
+      return base.call(this, cfg)
+    }
+  })
   if (!img) return null
-  const sh = shadowProps(node.shadow, dist, node.scaleX, node.scaleY)
+  const size = imageSize(img)
+  const sh = shadowProps(node, dist, node.scaleX, node.scaleY)
+  const tapeEditable = selected && !node.locked
   return (
     <Group
+      ref={outer}
       id={node.id}
       name="el"
       x={node.x}
       y={node.y}
       rotation={node.rotation}
-      scaleX={node.scaleX}
-      scaleY={node.scaleY}
-      offsetX={node.width / 2}
-      offsetY={node.height / 2}
       opacity={node.opacity}
       onMouseDown={onSelect}
       onTap={onSelect}
       onMouseEnter={() => onHover(true)}
       onMouseLeave={() => onHover(false)}
       onTransformEnd={(e) => {
-        const n = e.target
-        useEditor.getState().updateNode(node.id, { x: n.x(), y: n.y(), rotation: n.rotation(), scaleX: n.scaleX(), scaleY: n.scaleY() })
+        const g = e.target
+        if (g !== e.currentTarget) return
+        const kx = g.scaleX()
+        const ky = g.scaleY()
+        g.scale({ x: 1, y: 1 })
+        useEditor.getState().updateNode(node.id, { x: g.x(), y: g.y(), rotation: g.rotation(), scaleX: node.scaleX * kx, scaleY: node.scaleY * ky })
       }}
       {...handlers(node.id, node.locked)}
     >
-      {node.torn ? (
-        <Shape
-          sceneFunc={tornSceneFunc(tornPolygon(node.id, node.width, node.height))}
-          fillPatternImage={img}
-          fillPatternRepeat="no-repeat"
-          fillPatternScaleX={node.width / img.naturalWidth}
-          fillPatternScaleY={node.height / img.naturalHeight}
-          {...sh}
+      <Group scaleX={node.scaleX} scaleY={node.scaleY} offsetX={node.width / 2} offsetY={node.height / 2}>
+        {node.torn ? (
+          <Shape
+            width={node.width}
+            height={node.height}
+            sceneFunc={tornSceneFunc(tornPolygon(node.id, node.width, node.height, node.tornOpts))}
+            fillPatternImage={img as HTMLImageElement}
+            fillPatternRepeat="no-repeat"
+            fillPatternScaleX={node.width / size.w}
+            fillPatternScaleY={node.height / size.h}
+            {...sh}
+          />
+        ) : (
+          <KImage image={img} width={node.width} height={node.height} {...sh} />
+        )}
+      </Group>
+      {node.tape && (
+        <Rect
+          {...tapeRect(node)}
+          name="tape"
+          draggable={tapeEditable}
+          onMouseEnter={(e) => tapeEditable && (e.target.getStage()!.container().style.cursor = 'move')}
+          onMouseLeave={(e) => (e.target.getStage()!.container().style.cursor = '')}
+          onDragStart={(e) => {
+            e.cancelBubble = true
+          }}
+          onDragMove={(e) => {
+            e.cancelBubble = true
+          }}
+          onDragEnd={(e) => {
+            e.cancelBubble = true
+            const p = tapePosFromPoint(node, e.target.x(), e.target.y())
+            useEditor.getState().updateNode(node.id, { tapeOpts: { ...TAPE_DEFAULT, ...node.tapeOpts, ...p } } as Partial<ImageNode>)
+          }}
         />
-      ) : (
-        <KImage image={img} width={node.width} height={node.height} {...sh} />
       )}
-      {node.tape && <Rect {...tapeRect(node)} />}
-      {hovered && !selected && (
-        <Rect x={-6 / Math.abs(node.scaleX)} y={-6 / Math.abs(node.scaleY)} width={node.width + 12 / Math.abs(node.scaleX)} height={node.height + 12 / Math.abs(node.scaleY)} stroke={INK} strokeWidth={1.5} dash={[6, 4]} strokeScaleEnabled={false} listening={false} />
-      )}
+      {hovered && !selected && <Rect x={-W / 2 - 6} y={-H / 2 - 6} width={W + 12} height={H + 12} stroke={INK} strokeWidth={1.5} dash={[6, 4]} strokeScaleEnabled={false} listening={false} />}
     </Group>
   )
 }
 
 function TextItem({ node, dist, hovered, selected, onSelect, onHover }: ItemProps<TextNode>) {
   const L = textLayout(node)
-  const sh = shadowProps(node.shadow, dist, node.scaleX, node.scaleY)
+  const sh = shadowProps(node, dist, node.scaleX, node.scaleY)
   const focus = () => window.dispatchEvent(new Event('focus-text-editor'))
   return (
     <Group

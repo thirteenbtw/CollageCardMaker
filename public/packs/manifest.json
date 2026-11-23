@@ -1,6 +1,499 @@
 {
  "packs": [
   {
+   "id": "people",
+   "name": "Люди",
+   "items": [
+    {
+     "file": "people-40.webp",
+     "name": "Мать-переселенка",
+     "category": "cutout",
+     "tags": [
+      "люди",
+      "ретро"
+     ],
+     "width": 644,
+     "height": 1200
+    },
+    {
+     "file": "people-42.webp",
+     "name": "Альберт Эйнштейн",
+     "category": "cutout",
+     "tags": [
+      "люди",
+      "ретро"
+     ],
+     "width": 651,
+     "height": 1200
+    },
+    {
+     "file": "people-45.webp",
+     "name": "Одри Хепбёрн",
+     "category": "cutout",
+     "tags": [
+      "люди",
+      "ретро"
+     ],
+     "width": 833,
+     "height": 1200
+    },
+    {
+     "file": "people-46.webp",
+     "name": "Фрида Кало",
+     "category": "cutout",
+     "tags": [
+      "люди",
+      "ретро"
+     ],
+     "width": 850,
+     "height": 1200
+    },
+    {
+     "file": "people-47.webp",
+     "name": "Амелия Эрхарт",
+     "category": "cutout",
+     "tags": [
+      "люди",
+      "ретро"
+     ],
+     "width": 1036,
+     "height": 956
+    },
+    {
+     "file": "people-48.webp",
+     "name": "Бастер Китон",
+     "category": "cutout",
+     "tags": [
+      "люди",
+      "ретро"
+     ],
+     "width": 711,
+     "height": 1200
+    },
+    {
+     "file": "people-51.webp",
+     "name": "Элвис Пресли",
+     "category": "cutout",
+     "tags": [
+      "люди",
+      "ретро"
+     ],
+     "width": 798,
+     "height": 1200
+    },
+    {
+     "file": "people-52.webp",
+     "name": "Мохаммед Али",
+     "category": "cutout",
+     "tags": [
+      "люди",
+      "ретро"
+     ],
+     "width": 867,
+     "height": 1200
+    },
+    {
+     "file": "people-54.webp",
+     "name": "Дядя Сэм",
+     "category": "cutout",
+     "tags": [
+      "люди",
+      "ретро"
+     ],
+     "width": 986,
+     "height": 1200
+    },
+    {
+     "file": "people-58.webp",
+     "name": "Рудольф Валентино",
+     "category": "cutout",
+     "tags": [
+      "люди",
+      "ретро"
+     ],
+     "width": 722,
+     "height": 952
+    },
+    {
+     "file": "people-59.webp",
+     "name": "Грейс Келли",
+     "category": "cutout",
+     "tags": [
+      "люди",
+      "ретро"
+     ],
+     "width": 974,
+     "height": 890
+    },
+    {
+     "file": "kodak.webp",
+     "name": "Девушка с камерой Kodak",
+     "category": "cutout",
+     "tags": [
+      "люди",
+      "реклама",
+      "ретро"
+     ],
+     "width": 690,
+     "height": 891
+    },
+    {
+     "file": "jeans.webp",
+     "name": "Девушка в джинсах",
+     "category": "cutout",
+     "tags": [
+      "люди",
+      "журнал",
+      "ретро"
+     ],
+     "width": 781,
+     "height": 1200
+    },
+    {
+     "file": "miles-davis.webp",
+     "name": "Майлз Дэвис, обложка GQ",
+     "category": "cutout",
+     "tags": [
+      "люди",
+      "журнал",
+      "музыка"
+     ],
+     "width": 910,
+     "height": 650
+    }
+   ]
+  },
+  {
+   "id": "antique",
+   "name": "Античность",
+   "items": [
+    {
+     "file": "antique-01.webp",
+     "name": "Бюст жреца",
+     "category": "cutout",
+     "tags": [
+      "античность",
+      "скульптура"
+     ],
+     "width": 738,
+     "height": 1200
+    },
+    {
+     "file": "antique-02.webp",
+     "name": "Бюст Калигулы",
+     "category": "cutout",
+     "tags": [
+      "античность",
+      "скульптура"
+     ],
+     "width": 819,
+     "height": 1200
+    },
+    {
+     "file": "antique-03.webp",
+     "name": "Голова греческого стратега",
+     "category": "cutout",
+     "tags": [
+      "античность",
+      "скульптура"
+     ],
+     "width": 656,
+     "height": 1200
+    },
+    {
+     "file": "antique-04.webp",
+     "name": "Бюст Геродота",
+     "category": "cutout",
+     "tags": [
+      "античность",
+      "скульптура"
+     ],
+     "width": 684,
+     "height": 1200
+    },
+    {
+     "file": "antique-05.webp",
+     "name": "Статуя Афродиты",
+     "category": "cutout",
+     "tags": [
+      "античность",
+      "скульптура"
+     ],
+     "width": 397,
+     "height": 1200
+    }
+   ]
+  },
+  {
+   "id": "botany",
+   "name": "Ботаника",
+   "items": [
+    {
+     "file": "botany-07.webp",
+     "name": "Камчатская роза",
+     "category": "cutout",
+     "tags": [
+      "ботаника",
+      "цветы"
+     ],
+     "width": 1034,
+     "height": 1200
+    },
+    {
+     "file": "botany-08.webp",
+     "name": "Ветка лайма с бабочкой",
+     "category": "cutout",
+     "tags": [
+      "ботаника",
+      "цветы"
+     ],
+     "width": 1053,
+     "height": 1026
+    },
+    {
+     "file": "botany-09.webp",
+     "name": "Хлопок с гусеницей",
+     "category": "cutout",
+     "tags": [
+      "ботаника",
+      "цветы"
+     ],
+     "width": 868,
+     "height": 1200
+    },
+    {
+     "file": "botany-10.webp",
+     "name": "Роза индийская",
+     "category": "cutout",
+     "tags": [
+      "ботаника",
+      "цветы"
+     ],
+     "width": 723,
+     "height": 1200
+    },
+    {
+     "file": "botany-11.webp",
+     "name": "Роза дамасская",
+     "category": "cutout",
+     "tags": [
+      "ботаника",
+      "цветы"
+     ],
+     "width": 921,
+     "height": 1200
+    }
+   ]
+  },
+  {
+   "id": "fauna",
+   "name": "Звери и птицы",
+   "items": [
+    {
+     "file": "fauna-14.webp",
+     "name": "Моли Геккеля",
+     "category": "cutout",
+     "tags": [
+      "животные",
+      "птицы"
+     ],
+     "width": 864,
+     "height": 1200
+    },
+    {
+     "file": "fauna-17.webp",
+     "name": "Носорог",
+     "category": "cutout",
+     "tags": [
+      "животные",
+      "птицы"
+     ],
+     "width": 1200,
+     "height": 856
+    },
+    {
+     "file": "fauna-18.webp",
+     "name": "Дикая индейка",
+     "category": "cutout",
+     "tags": [
+      "животные",
+      "птицы"
+     ],
+     "width": 845,
+     "height": 1200
+    },
+    {
+     "file": "fauna-19-1.webp",
+     "name": "Медузы Геккеля 1",
+     "category": "cutout",
+     "tags": [
+      "животные",
+      "птицы"
+     ],
+     "width": 702,
+     "height": 899
+    },
+    {
+     "file": "fauna-19-2.webp",
+     "name": "Медузы Геккеля 2",
+     "category": "cutout",
+     "tags": [
+      "животные",
+      "птицы"
+     ],
+     "width": 869,
+     "height": 1200
+    }
+   ]
+  },
+  {
+   "id": "space",
+   "name": "Космос",
+   "items": [
+    {
+     "file": "space-23.webp",
+     "name": "Астронавт на Луне",
+     "category": "cutout",
+     "tags": [
+      "космос"
+     ],
+     "width": 623,
+     "height": 1200
+    },
+    {
+     "file": "space-24.webp",
+     "name": "Земля «Голубой шарик»",
+     "category": "cutout",
+     "tags": [
+      "космос"
+     ],
+     "width": 1193,
+     "height": 1200
+    },
+    {
+     "file": "space-25.webp",
+     "name": "Восход Земли",
+     "category": "background",
+     "tags": [
+      "космос"
+     ],
+     "width": 1100,
+     "height": 1600
+    }
+   ]
+  },
+  {
+   "id": "paper",
+   "name": "Бумага и эфемера",
+   "items": [
+    {
+     "file": "paper-26.webp",
+     "name": "Партитура Дворжака",
+     "category": "cutout",
+     "tags": [
+      "бумага",
+      "ретро"
+     ],
+     "width": 1200,
+     "height": 979
+    },
+    {
+     "file": "paper-27.webp",
+     "name": "Мятая крафт-бумага",
+     "category": "background",
+     "tags": [
+      "бумага",
+      "ретро"
+     ],
+     "width": 891,
+     "height": 626
+    },
+    {
+     "file": "paper-29.webp",
+     "name": "Карта Скандинавии",
+     "category": "background",
+     "tags": [
+      "бумага",
+      "ретро"
+     ],
+     "width": 1600,
+     "height": 1371
+    },
+    {
+     "file": "paper-30.webp",
+     "name": "Карта мира",
+     "category": "background",
+     "tags": [
+      "бумага",
+      "ретро"
+     ],
+     "width": 1600,
+     "height": 1348
+    },
+    {
+     "file": "paper-31.webp",
+     "name": "Мятая оливковая бумага",
+     "category": "background",
+     "tags": [
+      "бумага",
+      "ретро"
+     ],
+     "width": 1600,
+     "height": 1067
+    },
+    {
+     "file": "paper-33.webp",
+     "name": "Старая бумага",
+     "category": "background",
+     "tags": [
+      "бумага",
+      "ретро"
+     ],
+     "width": 1200,
+     "height": 1600
+    },
+    {
+     "file": "paper-35.webp",
+     "name": "Билет 1926 года",
+     "category": "sticker",
+     "tags": [
+      "бумага",
+      "ретро"
+     ],
+     "width": 853,
+     "height": 817
+    }
+   ]
+  },
+  {
+   "id": "frames",
+   "name": "Рамки",
+   "items": [
+    {
+     "file": "frames-36.webp",
+     "name": "Картуш с завитками",
+     "category": "cutout",
+     "tags": [
+      "рамка",
+      "орнамент"
+     ],
+     "width": 1200,
+     "height": 932
+    },
+    {
+     "file": "frames-37.webp",
+     "name": "Овальный картуш",
+     "category": "cutout",
+     "tags": [
+      "рамка",
+      "орнамент"
+     ],
+     "width": 1057,
+     "height": 1193
+    }
+   ]
+  },
+  {
    "id": "masks",
    "name": "Маски",
    "items": [
@@ -554,48 +1047,6 @@
      ],
      "width": 90,
      "height": 161
-    }
-   ]
-  },
-  {
-   "id": "people",
-   "name": "Люди",
-   "items": [
-    {
-     "file": "kodak.webp",
-     "name": "Девушка с камерой Kodak",
-     "category": "cutout",
-     "tags": [
-      "люди",
-      "реклама",
-      "ретро"
-     ],
-     "width": 690,
-     "height": 891
-    },
-    {
-     "file": "jeans.webp",
-     "name": "Девушка в джинсах",
-     "category": "cutout",
-     "tags": [
-      "люди",
-      "журнал",
-      "ретро"
-     ],
-     "width": 1041,
-     "height": 1600
-    },
-    {
-     "file": "miles-davis.webp",
-     "name": "Майлз Дэвис, обложка GQ",
-     "category": "cutout",
-     "tags": [
-      "люди",
-      "журнал",
-      "музыка"
-     ],
-     "width": 910,
-     "height": 650
     }
    ]
   }

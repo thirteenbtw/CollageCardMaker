@@ -11,6 +11,9 @@ interface UIState {
   autoGen: null | { target: 'new' | 'current' }
   exportTarget: ExportTarget | null
   toast: { id: number; text: string } | null
+  cutoutAssetId: string | null
+  openCutout: (assetId: string) => void
+  closeCutout: () => void
   openAutoGen: (target: 'new' | 'current') => void
   closeAutoGen: () => void
   openExport: (t: ExportTarget) => void
@@ -22,6 +25,9 @@ export const useUI = create<UIState>((set) => ({
   autoGen: null,
   exportTarget: null,
   toast: null,
+  cutoutAssetId: null,
+  openCutout: (assetId) => set({ cutoutAssetId: assetId }),
+  closeCutout: () => set({ cutoutAssetId: null }),
   openAutoGen: (target) => set({ autoGen: { target } }),
   closeAutoGen: () => set({ autoGen: null }),
   openExport: (t) => set({ exportTarget: t }),

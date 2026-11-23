@@ -2,10 +2,10 @@ import { useEffect, useRef, useState } from 'react'
 import { useEditor, nodeLabel } from '../editor'
 import { useLibrary, assetUrl } from '../library'
 import { FONTS, FORMATS, PAPER_COLORS, getFormat } from '../formats'
-import { TAPES } from '../effects'
+import { COLOR_DEFAULT, isNeutralColor, SHADOW_DEFAULT, TAPE_DEFAULT, TAPES, TORN_DEFAULT } from '../effects'
 import { Icon } from '../ui/Icon'
 import { useUI } from '../ui/store'
-import { CATEGORY_KIND, type CardNode, type ImageNode, type TextNode } from '../types'
+import { CATEGORY_KIND, type CardNode, type ColorOpts, type ImageNode, type ShadowOpts, type TapeOpts, type TextNode, type TornOpts } from '../types'
 import { reshuffle } from '../autoLayout'
 
 /** slider with live preview; one history step per drag */
@@ -191,55 +191,190 @@ function SizeSlider({ node }: { node: CardNode }) {
   )
 }
 
+const TINTS = ['#D2694B', '#E4B011', '#5D798E', '#8A9A6B', '#C98AA0', '#2A1712']
+
+const COLOR_PRESETS: { label: string; c: Partial<ColorOpts> }[] = [
+  { label: 'Ч/Б', c: { grayscale: true, contrast: 10 } },
+  { label: 'Сепия', c: { grayscale: true, tint: '#C9A27A', tintAmount: 0.7 } },
+  { label: 'Выцветший', c: { saturation: -45, contrast: -20, brightness: 6 } },
+  { label: 'Яркий', c: { saturation: 45, contrast: 12 } },
+  { label: 'Дуотон', c: { grayscale: true, contrast: 20, brightness: 15, tint: '#D2694B', tintAmount: 1 } },
+]
+
+/** slider + live preview of a nested options object */
+function useOpts<T extends object>(node: CardNode, key: string, defaults: T) {
+  const { livePatch, commitLive, updateNode } = useEditor()
+  const cur = { ...defaults, ...((node as unknown as Record<string, unknown>)[key] as Partial<T> | undefined) } as T
+  return {
+    cur,
+    live: (patch: Partial<T>) => livePatch(node.id, { [key]: { ...cur, ...patch } } as Partial<CardNode>),
+    set: (patch: Partial<T> | null) => updateNode(node.id, { [key]: patch === null ? undefined : { ...cur, ...patch } } as Partial<CardNode>),
+    done: commitLive,
+  }
+}
+
+function ShadowSettings({ node }: { node: CardNode }) {
+  const o = useOpts<ShadowOpts>(node, 'shadowOpts', SHADOW_DEFAULT)
+  return (
+    <div className="fx-sub">
+      <Slider label="Сдвиг" value={o.cur.dist} min={0} max={4} step={0.1} unit="×" onLive={(v) => o.live({ dist: v })} onDone={o.done} />
+      <Slider label="Направление" value={o.cur.angle} min={0} max={359} unit="°" onLive={(v) => o.live({ angle: v })} onDone={o.done} />
+      <Slider label="Размытие" value={o.cur.blur} min={0} max={8} step={0.1} unit="×" onLive={(v) => o.live({ blur: v })} onDone={o.done} />
+      <Slider label="Плотность" value={Math.round(o.cur.opacity * 100)} min={5} max={100} unit="%" onLive={(v) => o.live({ opacity: v / 100 })} onDone={o.done} />
+      <div className="row fx-colors">
+        <span>Цвет</span>
+        {['#2A1712', '#6B5448', '#D2694B', '#5D798E'].map((c) => (
+          <button key={c} type="button" className="dot-sw" aria-label={c} aria-pressed={o.cur.color.toLowerCase() === c.toLowerCase()} style={{ background: c }} onClick={() => o.set({ color: c })} />
+        ))}
+        <input type="color" value={o.cur.color} onChange={(e) => o.live({ color: e.target.value })} onBlur={o.done} aria-label="Свой цвет тени" />
+        <button type="button" className="btn sm ghost" onClick={() => o.set(null)}>
+          Сбросить
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function TornSettings({ node }: { node: ImageNode }) {
+  const o = useOpts<TornOpts>(node, 'tornOpts', TORN_DEFAULT)
+  return (
+    <div className="fx-sub">
+      <Slider label="Глубина рваного края" value={Math.round(o.cur.depth * 1000) / 10} min={0.5} max={10} step={0.5} unit="%" onLive={(v) => o.live({ depth: v / 100 })} onDone={o.done} />
+      <Slider label="Размер зубцов" value={Math.round(o.cur.step * 1000) / 10} min={0.5} max={8} step={0.5} unit="%" onLive={(v) => o.live({ step: v / 100 })} onDone={o.done} />
+      <div className="row" style={{ gap: 8 }}>
+        <button type="button" className="btn sm" onClick={() => o.set({ seed: o.cur.seed + 1 })}>
+          <Icon name="shuffle" size={16} /> Другой узор
+        </button>
+        <button type="button" className="btn sm ghost" onClick={() => o.set(null)}>
+          Сбросить
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function TapeSettings({ node }: { node: ImageNode }) {
+  const updateNode = useEditor((s) => s.updateNode)
+  const o = useOpts<TapeOpts>(node, 'tapeOpts', TAPE_DEFAULT)
+  return (
+    <div className="fx-sub">
+      <div className="tapes" role="radiogroup" aria-label="Цвет ленты">
+        {TAPES.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            className="tape-sw"
+            role="radio"
+            aria-checked={node.tape === t.id}
+            aria-label={t.label}
+            title={t.label}
+            style={{ ['--a' as string]: t.a, ['--b' as string]: t.b }}
+            onClick={() => updateNode(node.id, { tape: t.id } as Partial<CardNode>)}
+          />
+        ))}
+      </div>
+      <p className="fx-note">Ленту можно перетащить мышью прямо на открытке.</p>
+      <Slider label="Наклон ленты" value={Math.round(o.cur.rotation)} min={-90} max={90} unit="°" onLive={(v) => o.live({ rotation: v })} onDone={o.done} />
+      <Slider label="Длина ленты" value={Math.round(o.cur.len * 100)} min={30} max={220} unit="%" onLive={(v) => o.live({ len: v / 100 })} onDone={o.done} />
+      <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+        <button type="button" className="chip sm" onClick={() => o.set({ x: 0.5, y: 0.03, rotation: -7 })}>
+          Сверху
+        </button>
+        <button type="button" className="chip sm" onClick={() => o.set({ x: 0.1, y: 0.07, rotation: -40 })}>
+          На угол
+        </button>
+        <button type="button" className="chip sm" onClick={() => o.set({ x: 0.5, y: 0.97, rotation: 4 })}>
+          Снизу
+        </button>
+        <button type="button" className="btn sm ghost" onClick={() => o.set(null)}>
+          Вернуть на место
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function ColorSettings({ node }: { node: ImageNode }) {
+  const o = useOpts<ColorOpts>(node, 'color', COLOR_DEFAULT)
+  const c = o.cur
+  return (
+    <section className="prop">
+      <h3>Цвет</h3>
+      <div className="row" style={{ gap: 6, flexWrap: 'wrap' }}>
+        {COLOR_PRESETS.map((p) => (
+          <button key={p.label} type="button" className="chip sm" onClick={() => o.set({ ...COLOR_DEFAULT, ...p.c })}>
+            {p.label}
+          </button>
+        ))}
+      </div>
+      <Slider label="Оттенок" value={c.hue} min={-180} max={180} unit="°" onLive={(v) => o.live({ hue: v })} onDone={o.done} />
+      <Slider label="Насыщенность" value={c.saturation} min={-100} max={100} onLive={(v) => o.live({ saturation: v })} onDone={o.done} />
+      <Slider label="Яркость" value={c.brightness} min={-80} max={80} onLive={(v) => o.live({ brightness: v })} onDone={o.done} />
+      <Slider label="Контраст" value={c.contrast} min={-80} max={80} onLive={(v) => o.live({ contrast: v })} onDone={o.done} />
+      <div className="fx">
+        <span className="txt">Чёрно-белое</span>
+        <button type="button" className="switch" role="switch" aria-checked={c.grayscale} aria-label="Чёрно-белое" onClick={() => o.set({ grayscale: !c.grayscale })} />
+      </div>
+      <div className="row fx-colors">
+        <span>Тон</span>
+        <button type="button" className="dot-sw none" aria-label="Без тона" aria-pressed={!c.tint} onClick={() => o.set({ tint: null })} />
+        {TINTS.map((t) => (
+          <button key={t} type="button" className="dot-sw" aria-label={t} aria-pressed={c.tint?.toLowerCase() === t.toLowerCase()} style={{ background: t }} onClick={() => o.set({ tint: t })} />
+        ))}
+        <input type="color" value={c.tint ?? '#D2694B'} onChange={(e) => o.live({ tint: e.target.value })} onBlur={o.done} aria-label="Свой цвет тона" />
+      </div>
+      {c.tint && <Slider label="Сила тона" value={Math.round(c.tintAmount * 100)} min={5} max={100} unit="%" onLive={(v) => o.live({ tintAmount: v / 100 })} onDone={o.done} />}
+      {!isNeutralColor(node.color) && (
+        <button type="button" className="btn sm ghost" onClick={() => o.set(null)}>
+          Сбросить цвет
+        </button>
+      )}
+    </section>
+  )
+}
+
 function Effects({ node }: { node: CardNode }) {
   const updateNode = useEditor((s) => s.updateNode)
-  const rows: [string, string, string, string, boolean, () => void][] = [
-    ['Тень', 'Жёсткая, со сдвигом', '#EFE6D4', '▢', !!node.shadow, () => updateNode(node.id, { shadow: !node.shadow })],
+  const rows: [string, string, string, string, boolean, () => void, React.ReactNode][] = [
+    ['Тень', 'Сдвиг, размытие, цвет', '#EFE6D4', '▢', !!node.shadow, () => updateNode(node.id, { shadow: !node.shadow }), <ShadowSettings key="s" node={node} />],
   ]
   if (node.type === 'image') {
-    rows.push(['Рваный край', 'Как вырванный лист', '#FBE3D9', '≈', !!node.torn, () => updateNode(node.id, { torn: !node.torn } as Partial<CardNode>)])
-    rows.push(['Васи-лента', 'Приклеено сверху', '#F3D46A', '▭', !!node.tape, () => updateNode(node.id, { tape: node.tape ? null : 'mustard' } as Partial<CardNode>)])
+    rows.push(['Рваный край', 'Как вырванный лист', '#FBE3D9', '≈', !!node.torn, () => updateNode(node.id, { torn: !node.torn } as Partial<CardNode>), <TornSettings key="t" node={node} />])
+    rows.push(['Васи-лента', 'Тяните её мышью', '#F3D46A', '▭', !!node.tape, () => updateNode(node.id, { tape: node.tape ? null : 'mustard' } as Partial<CardNode>), <TapeSettings key="p" node={node} />])
   } else {
-    rows.push(['Лента-наклейка', 'Плашка под текстом', '#F3D46A', '▭', !!node.bg, () => updateNode(node.id, { bg: node.bg ? null : '#2A1712', fill: node.bg ? '#2A1712' : '#FFFDF8' } as Partial<CardNode>)])
+    rows.push([
+      'Лента-наклейка',
+      'Плашка под текстом',
+      '#F3D46A',
+      '▭',
+      !!node.bg,
+      () => updateNode(node.id, { bg: node.bg ? null : '#2A1712', fill: node.bg ? '#2A1712' : '#FFFDF8' } as Partial<CardNode>),
+      node.type === 'text' && node.bg ? (
+        <div className="row fx-sub">
+          <span style={{ fontSize: 14 }}>Цвет плашки</span>
+          <input type="color" value={node.bg} onChange={(e) => updateNode(node.id, { bg: e.target.value } as Partial<CardNode>)} aria-label="Цвет плашки" />
+        </div>
+      ) : null,
+    ])
   }
   return (
     <section className="prop">
       <h3>Эффекты</h3>
-      {rows.map(([label, hint, bg, glyph, on, toggle]) => (
-        <div key={label} className="fx">
-          <span className="glyph" aria-hidden="true" style={{ background: bg }}>
-            {glyph}
-          </span>
-          <span className="txt">
-            {label}
-            <small>{hint}</small>
-          </span>
-          <button type="button" className="switch" role="switch" aria-checked={on} aria-label={label} onClick={toggle} />
+      {rows.map(([label, hint, bg, glyph, on, toggle, settings]) => (
+        <div key={label} className="fx-block">
+          <div className="fx">
+            <span className="glyph" aria-hidden="true" style={{ background: bg }}>
+              {glyph}
+            </span>
+            <span className="txt">
+              {label}
+              <small>{hint}</small>
+            </span>
+            <button type="button" className="switch" role="switch" aria-checked={on} aria-label={label} onClick={toggle} />
+          </div>
+          {on && settings}
         </div>
       ))}
-      {node.type === 'image' && node.tape && (
-        <div className="tapes" role="radiogroup" aria-label="Цвет ленты">
-          {TAPES.map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              className="tape-sw"
-              role="radio"
-              aria-checked={node.tape === t.id}
-              aria-label={t.label}
-              title={t.label}
-              style={{ ['--a' as string]: t.a, ['--b' as string]: t.b }}
-              onClick={() => updateNode(node.id, { tape: t.id } as Partial<CardNode>)}
-            />
-          ))}
-        </div>
-      )}
-      {node.type === 'text' && node.bg && (
-        <div className="row" style={{ paddingLeft: 48 }}>
-          <span style={{ fontSize: 14 }}>Цвет плашки</span>
-          <input type="color" value={node.bg} onChange={(e) => updateNode(node.id, { bg: e.target.value } as Partial<CardNode>)} aria-label="Цвет плашки" />
-        </div>
-      )}
     </section>
   )
 }
@@ -295,6 +430,7 @@ function NodeProps({ node }: { node: CardNode }) {
         </div>
         <Layers />
       </section>
+      {node.type === 'image' && <ColorSettings node={node} />}
       {!(node.type === 'image' && node.role) && <Effects node={node as ImageNode | TextNode} />}
     </>
   )

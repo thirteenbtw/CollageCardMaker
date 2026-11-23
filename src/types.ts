@@ -34,6 +34,9 @@ export interface Asset {
   starter?: boolean
   /** id of the picture pack this asset came from, see packs.ts */
   pack?: string
+  /** untouched source image for re-cutting; `crop` is where `blob` sits inside it */
+  original?: Blob
+  crop?: { x: number; y: number; w: number; h: number }
 }
 
 interface BaseNode {
@@ -46,6 +49,45 @@ interface BaseNode {
   opacity: number
   locked?: boolean
   shadow?: boolean
+  shadowOpts?: ShadowOpts
+}
+
+export interface ShadowOpts {
+  /** offset as a multiple of the format's base shadow distance */
+  dist: number
+  /** direction in degrees, 45 = down-right */
+  angle: number
+  /** blur as a multiple of the base distance */
+  blur: number
+  color: string
+  opacity: number
+}
+
+export interface TornOpts {
+  /** tooth depth, share of the short side */
+  depth: number
+  /** tooth width, share of the short side */
+  step: number
+  seed: number
+}
+
+export interface TapeOpts {
+  /** centre of the tape, share of element width / height (0..1) */
+  x: number
+  y: number
+  rotation: number
+  /** length multiplier */
+  len: number
+}
+
+export interface ColorOpts {
+  hue: number
+  saturation: number
+  brightness: number
+  contrast: number
+  grayscale: boolean
+  tint: string | null
+  tintAmount: number
 }
 
 export interface ImageNode extends BaseNode {
@@ -55,8 +97,11 @@ export interface ImageNode extends BaseNode {
   width: number
   height: number
   torn?: boolean
+  tornOpts?: TornOpts
   /** washi tape colour id, see effects.ts */
   tape?: string | null
+  tapeOpts?: TapeOpts
+  color?: ColorOpts
 }
 
 export interface TextNode extends BaseNode {

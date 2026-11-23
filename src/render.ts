@@ -2,7 +2,7 @@ import Konva from 'konva'
 import type { Asset, CardDoc, CardNode, ImageNode, TextNode } from './types'
 import { getFormat } from './formats'
 import { loadAssetImage, useLibrary } from './library'
-import { shadowDistance, shadowProps, tapeRect, textConfig, textLayout, tornPolygon } from './effects'
+import { colorized, imageSize, shadowDistance, shadowProps, tapeRect, textConfig, textLayout, tornPolygon } from './effects'
 
 export function tornSceneFunc(points: number[]) {
   return (ctx: Konva.Context, shape: Konva.Shape) => {
@@ -14,30 +14,29 @@ export function tornSceneFunc(points: number[]) {
   }
 }
 
-export function buildImage(node: ImageNode, img: HTMLImageElement, dist: number) {
-  const g = new Konva.Group({
-    x: node.x,
-    y: node.y,
-    rotation: node.rotation,
-    scaleX: node.scaleX,
-    scaleY: node.scaleY,
-    opacity: node.opacity,
-    offsetX: node.width / 2,
-    offsetY: node.height / 2,
-  })
-  const sh = shadowProps(node.shadow, dist, node.scaleX, node.scaleY)
+export function buildImage(node: ImageNode, source: HTMLImageElement, dist: number) {
+  const img = colorized(source, node.assetId, node.color)
+  const size = imageSize(img)
+  // outer group: position + rotation; inner group: scale. The tape lives in the outer
+  // group so a non-uniform scale never skews it.
+  const g = new Konva.Group({ x: node.x, y: node.y, rotation: node.rotation, opacity: node.opacity })
+  const inner = new Konva.Group({ scaleX: node.scaleX, scaleY: node.scaleY, offsetX: node.width / 2, offsetY: node.height / 2 })
+  g.add(inner)
+  const sh = shadowProps(node, dist, node.scaleX, node.scaleY)
   if (node.torn) {
-    g.add(
+    inner.add(
       new Konva.Shape({
-        sceneFunc: tornSceneFunc(tornPolygon(node.id, node.width, node.height)),
-        fillPatternImage: img,
+        width: node.width,
+        height: node.height,
+        sceneFunc: tornSceneFunc(tornPolygon(node.id, node.width, node.height, node.tornOpts)),
+        fillPatternImage: img as HTMLImageElement,
         fillPatternRepeat: 'no-repeat',
-        fillPatternScaleX: node.width / img.naturalWidth,
-        fillPatternScaleY: node.height / img.naturalHeight,
+        fillPatternScaleX: node.width / size.w,
+        fillPatternScaleY: node.height / size.h,
         ...sh,
       }),
     )
-  } else g.add(new Konva.Image({ image: img, width: node.width, height: node.height, ...sh }))
+  } else inner.add(new Konva.Image({ image: img, width: node.width, height: node.height, ...sh }))
   if (node.tape) g.add(new Konva.Rect(tapeRect(node)))
   return g
 }
@@ -54,7 +53,7 @@ export function buildText(node: TextNode, dist: number) {
     offsetX: L.offsetX,
     offsetY: L.offsetY,
   })
-  const sh = shadowProps(node.shadow, dist, node.scaleX, node.scaleY)
+  const sh = shadowProps(node, dist, node.scaleX, node.scaleY)
   if (node.bg) g.add(new Konva.Rect({ ...L.rect, fill: node.bg, ...sh }))
   g.add(new Konva.Text({ ...textConfig(node), ...(node.bg ? {} : sh) }))
   return g

@@ -164,12 +164,18 @@ function SelectionBar() {
   const node = useEditor((s) => s.doc.nodes.find((n) => n.id === s.selectedId))
   const { duplicateSelected, removeSelected, updateNode } = useEditor()
   const name = useNodeName(node)
+  const openCutout = useUI((s) => s.openCutout)
   if (!node) return null
   const isBg = node.type === 'image' && node.role === 'background'
   return (
     <div className="selbar" role="toolbar" aria-label="Выбранный элемент">
       <span className="mono">{kindOf(node)}</span>
       <span className="name">{name}</span>
+      {node.type === 'image' && !isBg && (
+        <button type="button" className="ib sm flat" aria-label="Вырезать вручную" title="Вырезать вручную" onClick={() => openCutout(node.assetId)}>
+          <Icon name="scissors" size={16} />
+        </button>
+      )}
       {!isBg && (
         <button type="button" className="ib sm flat" aria-label="Дублировать" title="Дублировать (Ctrl+D)" onClick={duplicateSelected}>
           <Icon name="copy" size={16} />

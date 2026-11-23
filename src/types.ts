@@ -32,6 +32,8 @@ export interface Asset {
   height: number
   createdAt: number
   starter?: boolean
+  /** id of the picture pack this asset came from, see packs.ts */
+  pack?: string
 }
 
 interface BaseNode {

@@ -7,6 +7,7 @@ import { useUI } from '../ui/store'
 import { CATEGORIES, CATEGORY_KIND, CATEGORY_LABELS, type Asset, type AssetCategory } from '../types'
 import { NAMED_COLORS, colorById } from '../colors'
 import { buildStarterKit } from '../starterKit'
+import { buildPacks, loadPacks, type Pack } from '../packs'
 import { removeBackground } from '../imageTools'
 import { plural } from '../util'
 
@@ -260,24 +261,33 @@ function AssetPanel({ asset, onClose }: { asset: Asset; onClose: () => void }) {
 
 export function StarterKitButton({ className = 'btn' }: { className?: string }) {
   const addAssets = useLibrary((s) => s.addAssets)
-  const hasStarter = useLibrary((s) => s.assets.some((a) => a.starter))
+  const assets = useLibrary((s) => s.assets)
   const notify = useUI((s) => s.notify)
-  const [busy, setBusy] = useState(false)
-  if (hasStarter) return null
+  const [busy, setBusy] = useState<string | null>(null)
+  const [packs, setPacks] = useState<Pack[]>([])
+  useEffect(() => {
+    loadPacks().then(setPacks)
+  }, [])
+  const hasKit = assets.some((a) => a.starter && !a.pack)
+  const present = new Set(assets.map((a) => a.pack).filter(Boolean))
+  const missing = packs.filter((p) => !present.has(p.id))
+  if (hasKit && missing.length === 0) return null
+  const label = hasKit ? `Добавить новые наборы (${missing.length})` : 'Добавить стартовый набор'
   return (
     <button
       type="button"
       className={className}
-      disabled={busy}
+      disabled={!!busy}
       onClick={async () => {
-        setBusy(true)
-        const kit = await buildStarterKit()
-        await addAssets(kit)
-        setBusy(false)
-        notify(`Стартовый набор добавлен: ${kit.length} элементов`)
+        setBusy('Рисую…')
+        const kit = hasKit ? [] : await buildStarterKit()
+        const pics = await buildPacks(missing, (d, t) => setBusy(`Загружаю ${d} из ${t}…`))
+        await addAssets([...kit, ...pics])
+        setBusy(null)
+        notify(`Добавлено элементов: ${kit.length + pics.length}`)
       }}
     >
-      <Icon name="sparkle" size={18} /> {busy ? 'Рисую…' : 'Добавить стартовый набор'}
+      <Icon name="sparkle" size={18} /> {busy ?? label}
     </button>
   )
 }
